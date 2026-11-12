@@ -1,0 +1,455 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Present Simple Challenge</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#6639d5,#ec4899,#ffb347);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.game {
+  width: 100%;
+  max-width: 720px;
+  background: white;
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 15px 40px #0003;
+  text-align: center;
+}
+h1 { color: #6334ce; margin-bottom: 5px; }
+.subtitle { color: #777; }
+.progress {
+  height: 14px;
+  background: #e9e3fa;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 25px 0;
+}
+.bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#00c9a7,#7c3aed);
+  transition: .3s;
+}
+.tag {
+  display: inline-block;
+  background: #eee5ff;
+  color: #6536cb;
+  padding: 9px 18px;
+  border-radius: 30px;
+  font-weight: bold;
+}
+.question {
+  font-size: 24px;
+  line-height: 1.6;
+  margin: 28px 0;
+  font-weight: bold;
+}
+.options {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 12px;
+}
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-size: 17px;
+  font-weight: bold;
+  transition: .2s;
+}
+.option {
+  background: #f0ecff;
+  color: #44278b;
+  border: 2px solid transparent;
+}
+.option:hover:not(:disabled) {
+  background: #e1d6ff;
+  transform: translateY(-2px);
+}
+.option:disabled { cursor: default; }
+.correct {
+  background: #d1fae5 !important;
+  border-color: #16a34a;
+  color: #166534;
+}
+.wrong {
+  background: #fee2e2 !important;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+.feedback {
+  min-height: 75px;
+  margin-top: 18px;
+  font-size: 20px;
+  font-weight: bold;
+}
+.good { color: #16a34a; }
+.bad { color: #dc2626; }
+.next {
+  background: #6639d5;
+  color: white;
+  padding: 15px 35px;
+}
+.next:hover { background: #4c25ad; }
+.next:disabled { opacity: .5; cursor: default; }
+.score {
+  font-size: 65px;
+  color: #6639d5;
+  font-weight: bold;
+}
+.hidden { display: none; }
+.small { color: #777; font-size: 14px; }
+@media(max-width:500px) {
+  .game { padding: 20px; }
+  .question { font-size: 20px; }
+  .options { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="game">
+  <h1>🎮 Present Simple Challenge</h1>
+  <p class="subtitle">Grammar Mission • Level A1–A2</p>
+
+  <div id="quiz">
+    <p id="counter">Question 1 of 10</p>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <span class="tag" id="category"></span>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next" id="next" onclick="nextQuestion()" disabled>
+      Next question ➜
+    </button>
+  </div>
+
+  <div id="result" class="hidden">
+    <h2>🏆 Mission Complete!</h2>
+    <div class="score" id="score"></div>
+    <h2 id="message"></h2>
+    <p>Ready for another challenge?</p>
+    <button class="next" onclick="startGame()">
+      🔄 Play Again
+    </button>
+  </div>
+</div>
+
+<script>
+// Each question contains:
+// type, sentence, answer, and three distractors.
+
+const questions = [
+
+ // DO / DOES
+ ["Do or Does","___ you like computer games?","Do","Does","Are","Is"],
+ ["Do or Does","___ she play basketball?","Does","Do","Is","Has"],
+ ["Do or Does","___ your friends walk to school?","Do","Does","Are","Is"],
+ ["Do or Does","___ Tom watch TV after school?","Does","Do","Is","Has"],
+ ["Do or Does","___ they listen to music?","Do","Does","Is","Has"],
+ ["Do or Does","___ your brother like pizza?","Does","Do","Is","Are"],
+ ["Do or Does","___ we have English on Monday?","Do","Does","Are","Is"],
+ ["Do or Does","___ Emma get up early?","Does","Do","Is","Has"],
+ ["Do or Does","___ your parents work on Saturdays?","Do","Does","Are","Is"],
+ ["Do or Does","___ the dog sleep in your room?","Does","Do","Is","Has"],
+
+ // THIRD PERSON S / ES
+ ["Verb Forms","My sister ___ to school by bus.","goes","go","going","gos"],
+ ["Verb Forms","Jack ___ football every Friday.","plays","play","playing","playes"],
+ ["Verb Forms","My dad ___ dinner on Sundays.","cooks","cook","cooking","cookes"],
+ ["Verb Forms","Lucy ___ her homework after school.","does","do","doing","dos"],
+ ["Verb Forms","Ben ___ TV in the evening.","watches","watch","watching","watchs"],
+ ["Verb Forms","My friend ___ English at school.","studies","study","studys","studying"],
+ ["Verb Forms","The cat ___ on the sofa.","sleeps","sleep","sleeping","sleepes"],
+ ["Verb Forms","My mum ___ a new book every month.","reads","read","reading","reades"],
+ ["Verb Forms","He ___ his teeth every morning.","brushes","brush","brushing","brushs"],
+ ["Verb Forms","Sarah ___ her bike to school.","rides","ride","riding","ridees"],
+
+ // NEGATIVES
+ ["Negatives","I ___ like horror films.","don't","doesn't","am not","isn't"],
+ ["Negatives","She ___ eat meat.","doesn't","don't","isn't","aren't"],
+ ["Negatives","They ___ play tennis.","don't","doesn't","isn't","wasn't"],
+ ["Negatives","My brother ___ get up early.","doesn't","don't","isn't","aren't"],
+ ["Negatives","We ___ watch TV in the morning.","don't","doesn't","isn't","hasn't"],
+ ["Negatives","Tom ___ like vegetables.","doesn't","don't","isn't","aren't"],
+ ["Negatives","You ___ need a new pencil.","don't","doesn't","isn't","hasn't"],
+ ["Negatives","Emma and Lucy ___ go swimming.","don't","doesn't","isn't","wasn't"],
+ ["Negatives","My dog ___ like cats.","doesn't","don't","isn't","aren't"],
+ ["Negatives","I ___ have breakfast at school.","don't","doesn't","am not","isn't"],
+
+ // GAP FILLING
+ ["Gap Filling","She ___ to music every day.","listens","listen","listening","listenes"],
+ ["Gap Filling","They ___ football after school.","play","plays","playing","played"],
+ ["Gap Filling","He doesn't ___ coffee.","drink","drinks","drinking","drank"],
+ ["Gap Filling","Does Anna ___ in London?","live","lives","living","lived"],
+ ["Gap Filling","My friends ___ computer games.","like","likes","liking","liked"],
+ ["Gap Filling","My brother ___ his room on Saturdays.","tidies","tidy","tidys","tidying"],
+ ["Gap Filling","We don't ___ to school on Sundays.","go","goes","going","went"],
+ ["Gap Filling","Does your dad ___ a car?","drive","drives","driving","drove"],
+ ["Gap Filling","The baby ___ a lot.","cries","cry","crys","crying"],
+ ["Gap Filling","I ___ my homework in the afternoon.","do","does","doing","did"],
+
+ // ADVERBS OF FREQUENCY
+ // Students choose the correctly ordered sentence.
+ ["Word Order","Choose the correct sentence.",
+ "I always get up at seven.",
+ "I get up always at seven.",
+ "Always I get up at seven.",
+ "I get always up at seven."],
+
+ ["Word Order","Choose the correct sentence.",
+ "She is usually happy.",
+ "She usually is happy.",
+ "She happy is usually.",
+ "Usually she happy is."],
+
+ ["Word Order","Choose the correct sentence.",
+ "We never eat fish.",
+ "We eat never fish.",
+ "We never are eat fish.",
+ "Never we eat fish."],
+
+ ["Word Order","Choose the correct sentence.",
+ "Tom often plays football.",
+ "Tom plays often football.",
+ "Tom is often play football.",
+ "Often Tom football plays."],
+
+ ["Word Order","Choose the correct sentence.",
+ "They are sometimes late.",
+ "They sometimes are late.",
+ "They late are sometimes.",
+ "They are late sometimes always."],
+
+ ["Word Order","Choose the correct sentence.",
+ "I normally walk to school.",
+ "I walk normally to school.",
+ "I am normally walk to school.",
+ "Normally I to school walk."],
+
+ ["Word Order","Choose the correct sentence.",
+ "My dad doesn't often cook.",
+ "My dad doesn't cook often always.",
+ "My dad often doesn't cooks.",
+ "My dad don't often cook."],
+
+ ["Word Order","Choose the correct sentence.",
+ "She is never tired.",
+ "She never is tired.",
+ "She is tired never.",
+ "Never she tired is."],
+
+ ["Word Order","Choose the correct sentence.",
+ "We don't often watch TV.",
+ "We don't watch often TV.",
+ "We doesn't often watch TV.",
+ "We not often watches TV."],
+
+ ["Word Order","Choose the correct sentence.",
+ "He always does his homework.",
+ "He does always his homework.",
+ "He always do his homework.",
+ "He is always do his homework."],
+
+ ["Word Order","Choose the correct sentence.",
+ "My friends usually play outside.",
+ "My friends play usually outside.",
+ "My friends usually plays outside.",
+ "My friends are usually play outside."],
+
+ ["Word Order","Choose the correct sentence.",
+ "My teacher is always friendly.",
+ "My teacher always is friendly.",
+ "My teacher friendly is always.",
+ "My teacher is friendly always never."],
+
+ ["Word Order","Choose the correct sentence.",
+ "I sometimes read comics.",
+ "I read sometimes comics.",
+ "I am sometimes read comics.",
+ "Sometimes I comics read."],
+
+ ["Word Order","Choose the correct sentence.",
+ "She doesn't normally eat breakfast.",
+ "She doesn't eat normally breakfast.",
+ "She don't normally eat breakfast.",
+ "She doesn't normally eats breakfast."]
+
+];
+
+let round = [];
+let index = 0;
+let points = 0;
+let answered = false;
+let previousIds = new Set();
+
+// Shuffle an array.
+function shuffle(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
+// Select two questions from each category.
+function makeRound() {
+  const categories = [
+    "Do or Does",
+    "Verb Forms",
+    "Negatives",
+    "Gap Filling",
+    "Word Order"
+  ];
+
+  let selected = [];
+
+  for (const category of categories) {
+    const available = questions
+      .map((q,i) => ({q,i}))
+      .filter(item =>
+        item.q[0] === category &&
+        !previousIds.has(item.i)
+      );
+
+    let pool = available;
+
+    if (pool.length < 2) {
+      pool = questions
+        .map((q,i) => ({q,i}))
+        .filter(item => item.q[0] === category);
+    }
+
+    selected.push(...shuffle(pool).slice(0,2));
+  }
+
+  previousIds = new Set(selected.map(item => item.i));
+  return shuffle(selected.map(item => item.q));
+}
+
+function startGame() {
+  round = makeRound();
+  index = 0;
+  points = 0;
+  answered = false;
+
+  document.getElementById("quiz").classList.remove("hidden");
+  document.getElementById("result").classList.add("hidden");
+
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const q = round[index];
+
+  document.getElementById("counter").textContent =
+    "Question " + (index + 1) + " of 10";
+
+  document.getElementById("bar").style.width =
+    (index / 10 * 100) + "%";
+
+  document.getElementById("category").textContent = q[0];
+  document.getElementById("question").textContent = q[1];
+  document.getElementById("feedback").innerHTML = "";
+
+  const next = document.getElementById("next");
+  next.disabled = true;
+  next.textContent =
+    index === 9 ? "See My Results ➜" : "Next Question ➜";
+
+  const options = document.getElementById("options");
+  options.innerHTML = "";
+
+  const choices = shuffle(q.slice(2));
+
+  choices.forEach(choice => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = choice;
+    btn.onclick = () => checkAnswer(choice,btn);
+    options.appendChild(btn);
+  });
+}
+
+function checkAnswer(choice,clickedButton) {
+  if (answered) return;
+  answered = true;
+
+  const correctAnswer = round[index][2];
+  const feedback = document.getElementById("feedback");
+
+  const buttons = document.querySelectorAll(".option");
+
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correctAnswer) {
+      btn.classList.add("correct");
+    }
+  });
+
+  if (choice === correctAnswer) {
+    points++;
+    clickedButton.classList.add("correct");
+    feedback.innerHTML =
+      '<span class="good">✔ Excellent! Correct answer!</span>';
+  } else {
+    clickedButton.classList.add("wrong");
+    feedback.innerHTML =
+      '<span class="bad">✘ Not quite!</span>' +
+      '<div class="small">Correct answer: ' +
+      correctAnswer + '</div>';
+  }
+
+  document.getElementById("bar").style.width =
+    ((index + 1) / 10 * 100) + "%";
+
+  document.getElementById("next").disabled = false;
+}
+
+function nextQuestion() {
+  if (!answered) return;
+
+  index++;
+
+  if (index >= 10) {
+    showResults();
+  } else {
+    showQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("score").textContent =
+    points + " / 10";
+
+  let message = "";
+
+  if (points === 10) {
+    message = "🌟 Perfect! You're a grammar superstar!";
+  } else if (points >= 8) {
+    message = "🎉 Great job! Keep it up!";
+  } else if (points >= 6) {
+    message = "👍 Good work! Keep practising!";
+  } else {
+    message = "💪 Don't give up! Try again!";
+  }
+
+  document.getElementById("message").textContent = message;
+}
+
+startGame();
+</script>
+</body>
+</html>
